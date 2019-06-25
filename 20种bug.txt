@@ -1,0 +1,200 @@
+	1>.调用bookstrap时出现坍塌问题（浮动的bug）
+		解决：.clearfix:before,.clearfix:after{content: " ";display: table;}
+			.clearfix:after { clear: both;}
+	
+	2>.苹果浏览器中css圆与背景图片有时不显示的bug
+		原因：  1.苹果浏览器中图片背景要显示该div中必须要有内容 
+			2.苹果浏览器中css圆需要line-height撑开大小与高度一样，否则会是椭圆
+		解决：<div style="width:50px;height:50px;line-height: 50px;border-radius: 50%;background-color: #2090ff;background-image: url(http://www.l2cplat.com/email_img/20150916/12.png);background-repeat: no-repeat;background-position:center;float: left;">&nbsp;</div>
+	
+	3>.图片下方有空隙
+
+插入图片后默认会有一个空隙 给父级元素加一个边框就能看到 
+?
+?? ??? ??? ?
+		解决方案：img{vertical-align：middle/top/bottom;} 
+?? ?img{display:block;} 
+?? ??? ?
+	
+	4>.插入多个img标签时，换行输入代码，图片左右之间有一个空隙?? ?
+
+?? ??? ??? ?
+		解决方案:让代码在同一行显示或者img{float：left；} 
+?? ??? ?
+	
+	5>.img标签与文本之间或者与input标签上下不对齐
+
+?? ??? ??? ?
+		解决方案：img{vertical-align：middle；} 
+?? ??? ?
+	
+	6>.img标签与其他之间有空隙时
+
+?? ??? ??? ?
+		解决方案：img{float：left；} 
+?其他标签{float：left；} 
+?通过margin-top来控制上下之间的距离 
+?? ??? ?
+	
+	7>.浏览器当中所有的标签都会自带margin和padding，且每一个浏览器的margin值和padding值不一样
+?? ??? ??? ?
+		解决方案： *{margin：0；padding：0；} 
+?? ??? ?
+        
+	8>.给子元素添加上边距的时候，会作用在父元素身上 
+?? ??? ??? ?
+		解决方案：给父元素加padding值 padding：0.1px;父元素加边框不可选虽然能实现父元素加浮动不可选虽然能实现 
+?? ??? ?
+	
+	9>.滥用br标签引起的bug
+		原因： br标签目的在于换行，作为增加间距不能准确的给出具体的间距大小，作为列表不能明确的表示这是一个列表。
+		解决： 用line-height来调整行间距，用padding来解决段落之间的间距，这样也能很好的做到结构样式分离。
+	
+	10>.在修改用户名时用textarea替换文本时，获取焦点后，选择文字时报错
+jquery.js:5226 Uncaught TypeError: Illegal invocation at HTMLBodyElement.dispatch (jquery.js:5226) at HTMLBodyElement.elemData.handle (jquery.js:4878)
+		
+解决： 文本框动态绑定select的事件，禁止默认事件和冒泡
+	
+	11>.错误的对this进行引用,在闭包或则回调中，this关键字的作用域很容易弄错。
+		
+		举个例子：	  Game.prototype.restart = function () {this.clearLocalStorage();
+									this.timer = setTimeout(function() {
+									this.clearBoard(); // 此处this指的是?
+									}, 0)};
+ 		如果执行上面的代码，我们会看到报错：Uncaught TypeError: undefined is not a function
+ 
+
+		原因：当你调用setTimeout函数，你实际上调用的是window.setTimeout()。在setTimeout中传入的匿名函数是在window这个对象环境下，所以this是指向window，但是window并没有clearBoard方法。
+
+		解决:
+		
+		举例：① 定义新的变量引用指向Game对象的this，然后就可以使用啦
+			Game.prototype.restart = function () {
+			this.clearLocalStorage();
+			var self = this; // 将this指向的对象绑定到self
+			this.timer = setTimeout(function(){
+			self.clearBoard();
+			}, 0)};
+		     
+		      ② bind()函数：
+
+			Game.prototype.restart = function () {
+			this.clearLocalStorage();
+			this.timer = setTimeout(this.reset.bind(this), 0); // bind to 'this'
+			};
+ 
+			Game.prototype.reset = function(){
+			this.clearBoard(); // 此处this的引用正确
+			};
+ 
+
+	12>. 和块作用域(block scope)有关的BUG,在大多数程序语言中，每一个函数块都有一个独立的新的作用域，但是在JavaScript中并不是。
+
+		例如：
+
+			for (var i = 0; i < 10; i++) {
+			/* ... */ }
+			console.log(i); // 会输出什么呢？通常在这种情况下，调用console.log()会输出undefined或则报错。这里会输出10。
+		
+		原因：在JavaScript中，即使for循环已经结束，变量i依然存在，并且记录最后的值。有些开发者会忘记这一点，然后导致许多bug。
+		解决：我们可以使用let而不是for来杜绝这一问题。
+
+	13>. 内存泄漏
+
+		你需要监控内存使用量，因为泄露很难避免。内存泄露可能由于引用不存在的对象或则循环引用导致。
+
+		解决：关注对象的可访问性(reachability)。可访问的对象：现有的call stack任何位置可以访问的对象,全局对象当一个对象可以通过引用访问到，那么会在内存中保存。浏览器的垃圾回收器仅仅会把那些不可访问的对象回收。
+
+	14>. 混淆的相等判断
+		
+		原因：JavaScript自动将所有在布尔环境下的变量类型转换为布尔类型，但是可能导致bug。
+		
+		举例：
+
+			一下都是true=》
+			console.log(false == '0');
+			console.log(null == undefined);
+			console.log("true" == 0);
+			console.log('' == 0);
+			if ({}) // …
+			if ([]) // …
+			
+		解决：{}和[]都是对象，他们都会被转换为true。为了防止bug出现，推荐使用===和!==来做比较，因为不会隐式做类型转换。
+
+	15>.低效的DOM操作
+		原因：在JavaScript中，你可以轻松操作DOM(添加、修改和删除)，但是开发者往往很低效地去操作。这会导致bug出现，因为这些操作非常耗费计算资源。
+		解决：使用文档碎片(Document Fragment)，如果你需要操作多个DOM元素。
+
+	16>. 在for循环中错误的定义函数
+		举例：
+
+			var elements = document.getElementsByTagName('input');
+			var n = elements.length; // 假设我们有10个元素
+			for (var i = 0; i < n; i++) {
+			elements[i].onclick = function() {
+			console.log("元素编号#" + i);
+			};}
+	
+		原因：如果我们有10个元素，那么点击任何一个元素都会显示“元素编号#10”！因为在onclick被调用的时候，for循环已经结束，因此所有的i都是10。
+
+		解决：makeHandler在for循环执行的时候立即被调用，获取到当前的值i+1，并且存储在变量num中。makeHandler返回一个函数使用num变量，该函数被绑定到元素的点击事件。
+			var elements = document.getElementsByTagName('input');
+			var n = elements.length; // 假设有10个元素
+			var makeHandler = function(num) { // outer function
+			return function() { // inner function
+			console.log("元素编号##" + num);
+			};
+			};
+			for (var i = 0; i < n; i++) {
+			elements[i].onclick = makeHandler(i+1);
+			}
+
+	17>. ios6修复了css position:fixed 1像素抖动的bug，不过引出另一个bug：当给指定元素添加 position:fixed时首次加载页面完成后，滑动整个网页，添加此样式的元素会跟随页面滚动（目的是固定此元素）。
+		解决：为其元素添加如下css属性即可：-webkit-transform：translate3d(0,0,0)		
+	
+	18>. 使用touch事件时，android和ios对touchend的响应处理方式不一致，比如在a元素上使用touchend触发一个弹出层显示，在android上面的浏览器手指在a元素上做滑动操作，然后手指离开，结果不会触发 touchend事件，同样的操作在ios上会触发 touchend。
+		解决：
+			举例：
+				var isSlide=false;
+				$(“a”).bind(“touchstart”,function(){
+				isSlide=false;
+				});
+				$(“a”).bind(“touchmove”,function(){
+				isSlide=true;
+				});
+				$(“a”).bind(“touchend”,function(){
+				if(isSlide){
+				return;
+				}
+				//执行代码
+				});
+	
+	19>. setTimeout/setInterval函数第一个参数误用字符串
+		原因：如果你将一个字符串作为setTimeout/setTimeInterval，它会被传给函数构造函数并构建一个新的函数。该操作流程很慢而且低效，并导致bug出现。
+
+		举例：
+			var hello = function(){
+			console.log("hello, fundebug !");
+			}
+			setTimeout("hello", 1000);
+		
+		解决：一个好的替代方法就是传入函数作为参数：
+
+		举例：
+			setInterval(logTime, 1000); // 将logTime函数传入
+			setTimeout(function() { // 传入一个匿名函数
+			logMessage(msgValue);
+			}, 1000);
+
+	20>. 未能成功使用strict mode
+		原因：使用strict model会增加很多限制条件来加强安全和防止某些错误的出现，如果不使用strict mode，你就相当于少了一个得力的助手帮你避免错误：
+		
+		解决：
+			① 更加容易debug
+		        ② 避免不小心定义了不该定义的全局变量
+			③ 避免this隐式转换
+			④ 避免属性名字或则参数值的重复使用
+			⑤ eval()更加安全
+			⑥ 无效地使用delete会自动抛出错误
+	
+
